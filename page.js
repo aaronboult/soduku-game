@@ -11,6 +11,8 @@ $(function(){
 
     $(window).click(function(e){
 
+        ClearHighlight();
+        
         if (focusedCellID){
 
             ClearSelectedCell();
@@ -101,7 +103,7 @@ function BeginSoduku(){
 
         startTime = Date.now();
 
-    }, 100);
+    }, 100); // Used to ensure the cursor updates to the spinner
 
 }
 
@@ -110,12 +112,28 @@ function BeginSoduku(){
  * @param {event} e The click event fired when a cell is clicked
  */
 function OnCellClick(e){
+
+    if (highlightingEnabled){
+
+        let previousId = focusedCellID;
+
+        focusedCellID = this.id;
+
+        ClearHighlight();
+
+        HighlightAssociatedCells();
+
+        focusedCellID = previousId;
+
+    }
     
     if ($(this).attr("lockedCell") !== "true"){
 
         if (this.id === focusedCellID){
             
             ClearSelectedCell();
+    
+            ClearHighlight();
             
         }
         else{
@@ -131,14 +149,6 @@ function OnCellClick(e){
             $("#Numberpad").css("display", "grid");
 
             focusedCellID = this.id;
-
-            if (highlightingEnabled){
-
-                ClearHighlight();
-
-                HighlightAssociatedCells();
-
-            }
 
         }
 
