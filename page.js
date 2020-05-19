@@ -63,7 +63,7 @@ function BeginSoduku(){
 
     $("#Spinner").css("grid-area", "Begin");
 
-    setTimeout(async () => {
+    setTimeout(() => {
 
         startTime = Date.now();
     
