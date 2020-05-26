@@ -13,6 +13,15 @@ html, body{
     color: white;
 }
 
+oldbrowser{
+    display: none;
+}
+
+noscript, oldbrowser{
+    font-size: 1.5em;
+    color: white;
+}
+
 .InfoWrapper{
     position: absolute;
     top: 0px;
