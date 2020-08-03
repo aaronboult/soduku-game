@@ -1,21 +1,25 @@
-let focusedCellID, livesEnabled, highlightingEnabled, allowMultipleSolutions, startTime;
+let focusedCellID, 
+    livesEnabled, 
+    highlightingEnabled, 
+    allowMultipleSolutions, 
+    startTime;
 
-let puzzle = {
+const puzzle = {
     "grid": null,
     "solutions": null
 };
 
 $(function(){
 
-    GenerateGrid();
+    generateGrid();
 
-    $(window).click(function(e){
+    $(window).click(function(event){
 
-        ClearHighlight();
+        clearHighlight();
         
         if (focusedCellID){
 
-            ClearSelectedCell();
+            clearSelectedCell();
 
         }
 
@@ -26,21 +30,29 @@ $(function(){
 /**
  * Clear any grid and generated a new 9x9 grid of cells
  */
-function GenerateGrid(){
+function generateGrid(){
 
     $("#SodukuGrid").html("");
 
     for (let block = 0 ; block < 9 ; block++){
 
-        $("#SodukuGrid").append(`<div style="grid-area: Block${block};" class="SodukuBlock" id="Block${block}"></div>`);
+        $("#SodukuGrid").append(
+            `<div style="grid-area: Block${block};" class="SodukuBlock" id="Block${block}">
+            </div>`
+        );
 
         for (let cell = 0 ; cell < 9 ; cell++){
 
-            let yCoordinate = (Math.floor(block / 3) * 3) + (Math.floor(cell / 3));
+            const yCoordinate = (
+                Math.floor(block / 3) * 3
+            ) + Math.floor(cell / 3);
 
-            let xCoordinate = (block % 3) * 3 + (cell % 3);
+            const xCoordinate = (block % 3) * 3 + (cell % 3);
 
-            $(`#Block${block}`).append(`<div style="grid-area: Cell${cell};" id="Cell-${yCoordinate}-${xCoordinate}" enteredValue='-1' tempValue='-1'></div>`);
+            $(`#Block${block}`).append(
+                `<div style="grid-area: Cell${cell};" id="Cell-${yCoordinate}-${xCoordinate}" enteredValue='-1' tempValue='-1'>
+                </div>`
+            );
 
         }
 
@@ -51,7 +63,7 @@ function GenerateGrid(){
 /**
  * Handles the initial generation of the puzzle and the assigning of event listeners
  */
-function BeginSoduku(){
+function beginSoduku(){
 
     $("html, body, .Cell").css("cursor", "progress");
 
@@ -65,9 +77,10 @@ function BeginSoduku(){
 
     setTimeout(() => {
 
-        startTime = Date.now();
+        startTime = Date.now(); // For timing generation
     
-        livesEnabled = $("#InvalidAnswers").is(":checked") && !$("#InvalidAnswers").prop("disabled");
+        livesEnabled = $("#InvalidAnswers").is(":checked") && 
+            !$("#InvalidAnswers").prop("disabled");
 
         if (livesEnabled){
 
@@ -77,9 +90,10 @@ function BeginSoduku(){
     
         highlightingEnabled = $("#NumberHighlight").is(":checked");
 
-        allowMultipleSolutions = !$("#ForceUnique").is(":checked") && !$("#ForceUnique").prop("disabled");
+        allowMultipleSolutions = !$("#ForceUnique").is(":checked") && 
+            !$("#ForceUnique").prop("disabled");
 
-        [grid, solutions] = GenerateSoduku(parseInt($("#Difficulty").val()));
+        [grid, solutions] = generateSoduku(parseInt($("#Difficulty").val()));
 
         puzzle["grid"] = grid;
 
@@ -89,17 +103,19 @@ function BeginSoduku(){
     
         $("html, body, .Cell").css("cursor", "default");
 
-        console.log(`Generation took -> ${GetTimeTaken()}`);
+        console.log(
+            `Generation took -> ${getTimeTaken()}`
+        );
 
         $(".SodukuBlock div").each(function(){
 
             $(this).addClass("SodukuCell")
 
-            $(this).on("click", OnCellClick);
+            $(this).on("click", onCellClick);
 
         });
 
-        $(window).on("keydown", OnKeydown);
+        $(window).on("keydown", onKeydown);
 
         startTime = Date.now();
 
@@ -108,20 +124,38 @@ function BeginSoduku(){
 }
 
 /**
- * Handles selected and deselecting of cells
- * @param {event} e The click event fired when a cell is clicked
+ * Calculate the time in minutes and seconds between a given date object and now
+ * @returns {string} A string containing the minutes and seconds passed
  */
-function OnCellClick(e){
+function getTimeTaken(){
+
+    let seconds = Math.floor(
+        (Date.now() - startTime) / 1000
+    );
+
+    const minutes = Math.floor(seconds / 60);
+
+    seconds = seconds - (minutes * 60);
+
+    return `${minutes} minutes ${seconds} seconds`;
+
+}
+
+/**
+ * Handles selected and deselecting of cells
+ * @param {event} event The click event fired when a cell is clicked
+ */
+function onCellClick(event){
 
     if (highlightingEnabled){
 
-        let previousId = focusedCellID;
+        const previousId = focusedCellID;
 
         focusedCellID = this.id;
 
-        ClearHighlight();
+        clearHighlight();
 
-        HighlightAssociatedCells();
+        highlightAssociatedCells();
 
         focusedCellID = previousId;
 
@@ -131,22 +165,22 @@ function OnCellClick(e){
 
         if (this.id === focusedCellID){
             
-            ClearSelectedCell();
+            clearSelectedCell();
     
-            ClearHighlight();
+            clearHighlight();
             
         }
         else{
 
             if (focusedCellID){
                 
-                ClearSelectedCell();
+                clearSelectedCell();
 
             }
 
             $(this).addClass("SelectedCell");
 
-            $("#Numberpad").css("display", "grid");
+            $("#numberpad").css("display", "grid");
 
             focusedCellID = this.id;
 
@@ -154,32 +188,32 @@ function OnCellClick(e){
 
     }
 
-    e.stopPropagation();
+    event.stopPropagation();
 
 }
 
 /**
- * Handles whether or not to pass the input to the Numberpad
- * @param {event} e The KeyboardEvent that is fired when a key is pressed down
+ * Handles whether or not to pass the input to the numberpad
+ * @param {event} event The KeyboardEvent that is fired when a key is pressed down
  */
-function OnKeydown(e){
+function onKeydown(event){
     
     if (focusedCellID){
 
-        let key = parseInt(e.key);
+        const key = parseInt(event.key);
 
         if (!isNaN(key)){
 
             if (key > 0){
 
-                Numberpad(e, key);
+                numberpad(event, key);
 
             }
 
         }
         else{
 
-            switch(e.keyCode){
+            switch(event.keyCode){
 
                 case 8:
 
@@ -206,7 +240,7 @@ function OnKeydown(e){
  * @param {number} difficulty The value corresponding to the number of cells to be given as hints
  * @returns {*[]} Returns an array containing the generated grid and all solutions
  */
-function GenerateSoduku(difficulty){
+function generateSoduku(difficulty){
     
     let grid, solutions, result;
 
@@ -216,7 +250,9 @@ function GenerateSoduku(difficulty){
 
         solutions = [];
 
-        let template = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        let template = [1,2,3,4,5,6,7,8,9].sort(
+            () => Math.random() - 0.5
+        );
 
         for (let block = 0 ; block < 3 ; block++){
 
@@ -298,7 +334,11 @@ function GenerateSoduku(difficulty){
 
         }
         
-        result = SolveGrid(JSON.parse(JSON.stringify(grid)), solutions);
+        result = solveGrid(
+            JSON.parse(
+                JSON.stringify(grid) // Clone the grid to ensure it is not modified
+            ), solutions
+        );
         
     } while(result === -1 || solutions.length === 0);
 
@@ -330,7 +370,7 @@ function GenerateSoduku(difficulty){
  * @param {number[][][]} solutions An array containing the solved grids of all found solutions
  * @returns {number} A value of undefined, -1 or -2 is returned; -1 -> grid is invalid for the chosen setup, -2 -> no more solutions were found
  */
-function SolveGrid(grid, solutions){
+function solveGrid(grid, solutions){
 
     if (solutions.length > 1 && !allowMultipleSolutions){
 
@@ -346,11 +386,14 @@ function SolveGrid(grid, solutions){
             
                 for (let currentNumber = 1 ; currentNumber < 10 ; currentNumber++){
 
-                    if (CheckAxis(y, x, currentNumber, grid) && CheckSquare(y, x, currentNumber, grid)){
+                    if (
+                        checkAxis(y, x, currentNumber, grid) && 
+                        checkSquare(y, x, currentNumber, grid)
+                    ){
 
                         grid[y][x] = currentNumber;
 
-                        let result = SolveGrid(grid, solutions);
+                        const result = solveGrid(grid, solutions);
 
                         if (result){
                             
@@ -372,9 +415,13 @@ function SolveGrid(grid, solutions){
 
     }
     
-    if (!SolutionPresent(grid, solutions)){
+    if (!solutionPresent(grid, solutions)){
 
-        solutions.push(JSON.parse(JSON.stringify(grid)));
+        solutions.push(
+            JSON.parse(
+                JSON.stringify(grid) // Clone the grid to ensure the solution is not modified
+            )
+        );
 
     }
     else{
@@ -391,7 +438,7 @@ function SolveGrid(grid, solutions){
  * @param {numberp[][][]} solutions An array containing the solved grids of all found solutions
  * @returns {boolean} Whether or not the given grid is present in solutions
  */
-function SolutionPresent(grid, solutions){
+function solutionPresent(grid, solutions){
     
     for (let y = 0 ; y < grid.length ; y++){
 
@@ -409,13 +456,13 @@ function SolutionPresent(grid, solutions){
 
     let match = true;
 
-    for (let solutionIndex = 0 ; solutionIndex < solutions.length ; solutionIndex++){
+    for (let index = 0 ; index < solutions.length ; index++){
 
-        for (let y = 0 ; y < solutions[solutionIndex].length ; y++){
+        for (let y = 0 ; y < solutions[index].length ; y++){
     
-            for (let x = 0 ; x < solutions[solutionIndex][0].length ; x++){
+            for (let x = 0 ; x < solutions[index][0].length ; x++){
     
-                if (solutions[solutionIndex][y][x] !== grid[y][x]){
+                if (solutions[index][y][x] !== grid[y][x]){
     
                     match = false;
     
@@ -439,7 +486,7 @@ function SolutionPresent(grid, solutions){
  * @param {number[][]} grid An array containing the grid to try and solve
  * @returns {boolean} Whether or not the move is valid
  */
-function CheckAxis(rowIndex, columnIndex, value, grid){
+function checkAxis(rowIndex, columnIndex, value, grid){
 
     if (grid[rowIndex].indexOf(value) !== -1){
 
@@ -469,11 +516,11 @@ function CheckAxis(rowIndex, columnIndex, value, grid){
  * @param {number[][]} grid An array containing the grid to try and solve
  * @returns {boolean} Whether or not the move is valid
  */
-function CheckSquare(rowIndex, columnIndex, value, grid){
+function checkSquare(rowIndex, columnIndex, value, grid){
 
-    let squareStartRow = 3 * Math.floor(rowIndex / 3);
+    const squareStartRow = 3 * Math.floor(rowIndex / 3);
     
-    let squareStartColumn = 3 * Math.floor(columnIndex / 3);
+    const squareStartColumn = 3 * Math.floor(columnIndex / 3);
     
     for (let row = 0 ; row < 3 ; row++){
 
@@ -495,10 +542,10 @@ function CheckSquare(rowIndex, columnIndex, value, grid){
 
 /**
  * Handles inputting of values into selected cells
- * @param {event} e The event fired either from a keypress or a click
+ * @param {event} event The event fired either from a keypress or a click
  * @param {number} value The number to input into the cell, or -1 for clearing a cell or -2 for entering a value
  */
-function Numberpad(e, value){
+function numberpad(event, value){
 
     if (value > 0){
 
@@ -508,13 +555,13 @@ function Numberpad(e, value){
 
         if (highlightingEnabled){
 
-            ClearHighlight();
+            clearHighlight();
 
-            HighlightAssociatedCells();
+            highlightAssociatedCells();
 
         }
 
-        e.stopPropagation();
+        event.stopPropagation();
 
     }
     else{
@@ -535,9 +582,14 @@ function Numberpad(e, value){
                 
                 if ($(`#${focusedCellID}`).attr("tempValue") !== "-1"){
                 
-                    $(`#${focusedCellID}`).attr("enteredValue", $(`#${focusedCellID}`).attr("tempValue"));
+                    $(`#${focusedCellID}`).attr(
+                        "enteredValue", 
+                        $(`#${focusedCellID}`).attr("tempValue")
+                    );
 
-                    $(`#${focusedCellID}`).html($(`#${focusedCellID}`).attr("tempValue"));
+                    $(`#${focusedCellID}`).html(
+                        $(`#${focusedCellID}`).attr("tempValue")
+                    );
                 
                     $(`#${focusedCellID}`).attr("tempValue", "-1");
 
@@ -545,11 +597,11 @@ function Numberpad(e, value){
 
                     if (livesEnabled){
 
-                        CheckAnswerValidity();
+                        checkAnswerValidity();
 
                     }
 
-                    CheckCompletion();
+                    checkCompletion();
                 
                 }
                 
@@ -564,34 +616,30 @@ function Numberpad(e, value){
 /**
  * Highlights all cells with the same entered value as the selected cell
  */
-function HighlightAssociatedCells(){
+function highlightAssociatedCells(){
 
-    let cellValue = $(`#${focusedCellID}`).html();
+    const clicked = $(`#${focusedCellID}`);
 
-    for (let y = 0 ; y < 9 ; y++){
+    const cellValue = clicked.html();
 
-        for (let x = 0 ; x < 9 ; x++){
+    const locked = clicked.attr("LockedCell") === "true";
 
-            if (`Cell-${y}-${x}` !== focusedCellID){
+    $(`div[enteredValue="${cellValue}"]`).each(function(){
 
-                if ($(`#Cell-${y}-${x}`).attr("enteredValue") === cellValue){
+        if (this.id !== focusedCellID || locked){
 
-                    $(`#Cell-${y}-${x}`).addClass("Highlighted");
-
-                }
-
-            }
+            $(this).addClass("Highlighted");
 
         }
 
-    }
+    });
 
 }
 
 /**
  * Removes the highlight from all cells
  */
-function ClearHighlight(){
+function clearHighlight(){
 
     $(".Highlighted").each(function(){
 
@@ -604,11 +652,16 @@ function ClearHighlight(){
 /**
  * Clears the currently selected cell, as well as it's highlight and ID reference
  */
-function ClearSelectedCell(){
+function clearSelectedCell(){
 
-    if ($(`#${focusedCellID}`).attr("enteredValue") !== "-1" && $(`#${focusedCellID}`).attr("enteredValue")){
+    if (
+        $(`#${focusedCellID}`).attr("enteredValue") !== "-1" && 
+        $(`#${focusedCellID}`).attr("enteredValue")
+    ){
 
-        $(`#${focusedCellID}`).html($(`#${focusedCellID}`).attr("enteredValue"));
+        $(`#${focusedCellID}`).html(
+            $(`#${focusedCellID}`).attr("enteredValue")
+        );
 
     }
     else{
@@ -621,7 +674,7 @@ function ClearSelectedCell(){
 
     $(`#${focusedCellID}`).removeClass("SelectedCell");
 
-    $("#Numberpad").css("display", "none");
+    $("#numberpad").css("display", "none");
 
     focusedCellID = null;
 
@@ -630,9 +683,9 @@ function ClearSelectedCell(){
 /**
  * Checks whether the Soduku grid is filled, and if so, is the grid correct
  */
-function CheckCompletion(){
+function checkCompletion(){
 
-    let grid = [];
+    const grid = [];
 
     for (let y = 0 ; y < 9 ; y++){
 
@@ -655,9 +708,9 @@ function CheckCompletion(){
 
     }
 
-    if (SolutionPresent(grid, puzzle["solutions"])){
+    if (solutionPresent(grid, puzzle["solutions"])){
 
-        DisplayEndScreen(true);
+        displayEndScreen(true);
 
     }
 
@@ -666,19 +719,25 @@ function CheckCompletion(){
 /**
  * If lives were enabled on setup, this checks whether the inputted answer is correct
  */
-function CheckAnswerValidity(){
+function checkAnswerValidity(){
 
-    let cellIndex = focusedCellID.split("Cell-")[1].split("-");
+    const cellIndex = focusedCellID.split("Cell-")[1].split("-");
     
-    cellIndex.map((value, index, arr) => arr[index] = parseInt(value) );
+    cellIndex.map(
+        (value, index, arr) => arr[index] = parseInt(value)
+    );
 
-    let enteredAnswer = parseInt($(`#${focusedCellID}`).attr("enteredValue"));
+    const enteredAnswer = parseInt(
+        $(`#${focusedCellID}`).attr("enteredValue")
+    );
 
     let validAnswer = false;
 
     for (let solution = 0 ; solution < puzzle["solutions"].length ; solution++){
 
-        if (puzzle["solutions"][solution][cellIndex[0]][cellIndex[1]] === enteredAnswer){
+        if (
+            puzzle["solutions"][solution][cellIndex[0]][cellIndex[1]] === enteredAnswer
+        ){
 
             validAnswer = true;
 
@@ -692,7 +751,7 @@ function CheckAnswerValidity(){
 
         if (puzzle["lives"] <= 0){
 
-            DisplayEndScreen(false);
+            displayEndScreen(false);
 
         }
 
@@ -705,7 +764,7 @@ function CheckAnswerValidity(){
 /**
  * Disable all event listeners and hover events on the soduku grid
  */
-function DisabledGrid(){
+function disabledGrid(){
 
     $(".SodukuBlock div").each(function(){
 
@@ -715,25 +774,9 @@ function DisabledGrid(){
 
     });
 
-    ClearHighlight();
+    clearHighlight();
     
-    ClearSelectedCell();
-
-}
-
-/**
- * Calculate the time in minutes and seconds between a given date object and now
- * @returns {string} A string containing the minutes and seconds passed
- */
-function GetTimeTaken (){
-
-    let seconds = Math.floor((Date.now() - startTime) / 1000);
-
-    let minutes = Math.floor(seconds / 60);
-
-    seconds = seconds - (minutes * 60);
-
-    return `${minutes} minutes ${seconds} seconds`;
+    clearSelectedCell();
 
 }
 
@@ -741,17 +784,21 @@ function GetTimeTaken (){
  * Displays the end screen and formats it as necessary
  * @param {boolean} success Whether or not the user completed the soduku successfully
  */
-function DisplayEndScreen(success){
+function displayEndScreen(success){
 
-    DisabledGrid();
+    disabledGrid();
 
     $("#EndScreen").css("display", "grid");
 
-    $("#EndTime").html(`Solving For: ${GetTimeTaken()}`);
+    $("#EndTime").html(
+        `Solving For: ${getTimeTaken()}`
+    );
 
     if (livesEnabled && puzzle["lives"] !== 0){
 
-        $("#EndLives").html(`Lives Remaining: ${puzzle["lives"]}`);
+        $("#EndLives").html(
+            `Lives Remaining: ${puzzle["lives"]}`
+        );
 
     }
     else{
@@ -762,12 +809,16 @@ function DisplayEndScreen(success){
 
     if (success){
 
-        $("#Heading").html("Congratulations, you solved it!");
+        $("#Heading").html(
+            "Congratulations, you solved it!"
+        );
 
     }
     else{
 
-        $("#Heading").html("Sometimes things just don't go our way, but that doesn't mean we should give up!");
+        $("#Heading").html(
+            "Sometimes things just don't go our way, but that doesn't mean we should give up!"
+        );
 
     }
 
@@ -776,7 +827,7 @@ function DisplayEndScreen(success){
 /**
  * Regenerates the grid and displays the stup panel again
  */
-function Reset(){
+function reset(){
 
     $("#EndScreen").css("display", "none");
 
@@ -790,6 +841,6 @@ function Reset(){
 
     $("#Spinner").css("grid-area", "");
 
-    GenerateGrid();
+    generateGrid();
 
 }
